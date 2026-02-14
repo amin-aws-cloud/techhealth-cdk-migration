@@ -3,6 +3,7 @@ import * as cdk from "aws-cdk-lib/core";
 import { Construct } from "constructs";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as iam from "aws-cdk-lib/aws-iam";
+import * as rds from "aws-cdk-lib/aws-rds";
 
 export class TechhealthCdkMigrationStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -96,6 +97,36 @@ export class TechhealthCdkMigrationStack extends cdk.Stack {
     new cdk.CfnOutput(this, "EC2PublicIP", {
       value: ec2Instance.instancePublicIp,
       description: "EC2 Public IP Address",
+    });
+
+    // Launch RDS Instance in the Private Isolated Subnet
+    const rdsInstance = new rds.DatabaseInstance(
+      this,
+      "TechHealthRDSInstance",
+      {
+        vpc,
+        securityGroups: [rdsSecurityGroup],
+        publiclyAccessible: false,
+        vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
+        engine: rds.DatabaseInstanceEngine.mysql({
+          version: rds.MysqlEngineVersion.VER_8_0,
+        }),
+        instanceType: ec2.InstanceType.of(
+          ec2.InstanceClass.T3,
+          ec2.InstanceSize.MICRO,
+        ),
+        databaseName: "techhealthdb",
+        allocatedStorage: 20,
+        maxAllocatedStorage: 100,
+        credentials: rds.Credentials.fromGeneratedSecret("admin"),
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      },
+    );
+
+    // Output the RDS Endpoint in CloudFormation outputs for easy reference
+    new cdk.CfnOutput(this, "RDSEndpoint", {
+      value: rdsInstance.dbInstanceEndpointAddress,
+      description: "RDS Endpoint",
     });
   }
 }
