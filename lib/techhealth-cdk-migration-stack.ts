@@ -2,6 +2,7 @@
 import * as cdk from "aws-cdk-lib/core";
 import { Construct } from "constructs";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
+import * as iam from "aws-cdk-lib/aws-iam";
 
 export class TechhealthCdkMigrationStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -62,6 +63,17 @@ export class TechhealthCdkMigrationStack extends cdk.Stack {
       ec2SecurityGroup,
       ec2.Port.tcp(3306),
       "Allow MySQL access from EC2 instances",
+    );
+
+    // IAM Role for EC2 Instance to allow SSM access for management & monitoring
+    const ec2Role = new iam.Role(this, "EC2InstanceRole", {
+      assumedBy: new iam.ServicePrincipal("ec2.amazonaws.com"),
+    });
+
+    ec2Role.addManagedPolicy(
+      iam.ManagedPolicy.fromAwsManagedPolicyName(
+        "AmazonSSMManagedInstanceCore",
+      ),
     );
   }
 }
