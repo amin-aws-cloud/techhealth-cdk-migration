@@ -75,5 +75,27 @@ export class TechhealthCdkMigrationStack extends cdk.Stack {
         "AmazonSSMManagedInstanceCore",
       ),
     );
+
+    // Deploy EC2 Instance in the Public Subnet
+    const ec2Instance = new ec2.Instance(this, "TechHealthEC2Instance", {
+      vpc,
+      securityGroup: ec2SecurityGroup,
+      role: ec2Role,
+      keyName: "techhealth-keypair",
+      vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
+      instanceType: ec2.InstanceType.of(
+        ec2.InstanceClass.T2,
+        ec2.InstanceSize.MICRO,
+      ),
+      machineImage: new ec2.AmazonLinuxImage({
+        generation: ec2.AmazonLinuxGeneration.AMAZON_LINUX_2,
+      }),
+    });
+
+    // Output the EC2 Public IP in CloudFormation outputs for easy reference
+    new cdk.CfnOutput(this, "EC2PublicIP", {
+      value: ec2Instance.instancePublicIp,
+      description: "EC2 Public IP Address",
+    });
   }
 }
