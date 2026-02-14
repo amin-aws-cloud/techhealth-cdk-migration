@@ -29,5 +29,39 @@ export class TechhealthCdkMigrationStack extends cdk.Stack {
       value: vpc.vpcId,
       description: "VPC ID",
     });
+
+    // Security Group for EC2 instances to allow SSH & HTTP traffic
+    const ec2SecurityGroup = new ec2.SecurityGroup(this, "EC2SecurityGroup", {
+      vpc,
+      allowAllOutbound: true,
+      description:
+        "Security group for EC2 instances allowing SSH and HTTP traffic",
+    });
+
+    ec2SecurityGroup.addIngressRule(
+      ec2.Peer.anyIpv4(),
+      ec2.Port.tcp(22),
+      "Allow SSH access from anywhere",
+    );
+
+    ec2SecurityGroup.addIngressRule(
+      ec2.Peer.anyIpv4(),
+      ec2.Port.tcp(80),
+      "Allow HTTP access from anywhere",
+    );
+
+    // Security Group for RDS instances to allow MySQL traffic from EC2 instances
+    const rdsSecurityGroup = new ec2.SecurityGroup(this, "RDSSecurityGroup", {
+      vpc,
+      allowAllOutbound: true,
+      description:
+        "Security group for RDS instances allowing MySQL traffic from EC2 instances",
+    });
+
+    rdsSecurityGroup.addIngressRule(
+      ec2SecurityGroup,
+      ec2.Port.tcp(3306),
+      "Allow MySQL access from EC2 instances",
+    );
   }
 }
