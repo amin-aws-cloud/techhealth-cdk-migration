@@ -119,7 +119,7 @@ export class TechhealthCdkMigrationStack extends cdk.Stack {
         allocatedStorage: 20,
         maxAllocatedStorage: 100,
         credentials: rds.Credentials.fromGeneratedSecret("admin"),
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
+        removalPolicy: cdk.RemovalPolicy.DESTROY, // WARNING: Deletes DB on stack deletion
       },
     );
 
