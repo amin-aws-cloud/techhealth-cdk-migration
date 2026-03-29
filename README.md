@@ -310,9 +310,58 @@ cdk destroy
 
 <br>
 
-## What I learned
+# Lessons Learned
 
-<<<<<<<<<<<<<<<<<<<<<<< READ THROUGH "Section 6: Lessons Learned" section >>>>>>>>>>>>>>>>>>>>>>>>>>
+## Challenges Faced
+
+### 1. Understanding CDK Constructs
+
+The hardest part wasn't AWS itself. It was wrapping my head around how CDK works with TypeScript. Coming from the AWS Console where you click buttons, suddenly I'm dealing with classes, constructors, scopes, and constructs.
+
+The `this` keyword confused me at first. Why am I passing `this` as the first argument to every construct? It took me a while to understand that this refers to the Stack, and I'm building a tree of resources within that stack. Each construct needs to know its parent so CDK can build the hierarchy.
+
+I figured it out by reading the CDK documentation examples and experimenting. I'd create a simple VPC, deploy it, break it, fix it, and redeploy. After a few iterations, the pattern clicked. Now I can look at any CDK code and understand what's happening.
+
+---
+
+### 2. Security Group Configuration
+
+I initially tried to allow RDS access using the EC2 instance's IP address. That seemed logical: allow traffic from this specific IP. But CDK kept pushing me toward something different.
+
+Turns out you reference the security group object itself, not IP addresses. This creates dynamic, scalable rules. If EC2 instances scale up or get new IPs, they're automatically authorized because they're in the right security group.
+
+The solution was reading through AWS documentation on security group best practices and looking at real-world examples on GitHub. Once I understood security groups can reference each other, everything made more sense.
+
+---
+
+## Key Takeaways
+
+- I can destroy and recreate this entire infrastructure in 5 minutes. That's genuinely wild.  
+  In my first attempt, I messed up the security groups. Instead of carefully editing things in the console and hoping I didn't break anything, I just deleted everything with `cdk destroy` and redeployed with fixed code. Total time was 7 minutes. That's when Infrastructure as Code really clicked for me.
+
+- Good security comes from good architecture, not from adding more rules.  
+  By putting the database in a private subnet, I didn't have to configure complex firewall rules to block internet access. It's architecturally impossible to reach it from the internet. Security through design beats security through configuration.
+
+- Building things in small steps works way better than trying to do everything at once.  
+  I tried to write all the code at once initially: VPC, EC2, RDS, security groups, everything. It failed with cryptic errors. Then I switched to deploying VPC → testing → adding security groups → testing → adding EC2 → testing → adding RDS → testing. Each small step worked. This is how actual professionals work.
+
+---
+
+## Future Improvements
+
+If I were deploying this for real production use, I would:
+
+- Add an **Application Load Balancer** for better scalability and health checks
+- Implement **Auto Scaling** for EC2 to handle traffic spikes automatically
+- Enable **RDS Multi-AZ** for high availability in production environments
+
+I would also:
+
+- Move database credentials into **AWS Secrets Manager** instead of generating them in CDK
+- Set up **CloudWatch alarms** to detect issues early
+- Implement a proper **backup strategy** for RDS, including automated snapshots and point-in-time recovery
+
+These improvements would be critical for any real healthcare application handling patient data.
 
 <br>
 <br>
